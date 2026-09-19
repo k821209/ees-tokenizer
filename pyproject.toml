@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ees-tokenizer"
+version = "1.0.0"
+description = "Tokenize pooled plant single-cell transcriptomes against a fixed per-gene reference distribution"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+# No deep-learning stack: the reference table is applied arithmetically and a
+# model is not needed to produce tokens.
+dependencies = ["numpy", "pandas", "anndata", "h5py", "scipy"]
+
+[project.scripts]
+ees-tokenize = "ees_tokenizer.tokenize:main"
+
+[tool.setuptools]
+packages = ["ees_tokenizer"]
+
+[tool.setuptools.package-data]
+ees_tokenizer = []

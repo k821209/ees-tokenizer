@@ -1,0 +1,31 @@
+Bundle sheath
+Columella root cap
+Companion cell
+Guard cell
+Hydathodes
+Lateral root cap
+Leaf epidermis
+Leaf pavement cell
+Meristematic cell
+Mesophyll
+Metaxylem
+Non-hair
+Pericycle
+Phloem
+Phloem parenchyma
+Phloem pole pericycle
+Protoxylem
+Root cap
+Root cortex
+Root endodermis
+Root epidermis
+Root hair
+Root procambium
+Root stele
+Shoot apical meristem
+Shoot system epidermis
+Sieve element
+Stem cell niche
+Vascular tissue
+Xylem
+Xylem pole pericycle

@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: "EES-Tokenizer"
+message: "If you use this tokenizer or the reference distribution, please cite the paper and the deposit."
+type: software
+authors:
+  - family-names: Park
+    given-names: Joo-Seok
+  - family-names: Lee
+    given-names: Yejin
+  - family-names: Kang
+    given-names: Yang Jae
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22741864
+    description: "Reference distribution, corpus and model weights"
+license: MIT
