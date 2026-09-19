@@ -73,6 +73,40 @@ Every run also reports the three coverage counts, because each one quietly
 shrinks what a model downstream can see: genes here with no threshold, reference
 genes absent here, and emitted tokens outside the vocabulary (`[UNK]`).
 
+## Already-bulk input, and why the bulk table is a different artifact
+
+If your input is already one measurement per sample — bulk RNA-seq, or anything
+pre-aggregated — pooling would average away the sample you care about. Use
+`--no_pooling`, which emits one sentence per sample and emits **all** of them:
+
+```bash
+ees-tokenize --h5ad my_bulk.h5ad --no_pooling \
+             --reference <a reference built for that data> \
+             --down_rule with_zeros --out_prefix my_tokens
+```
+
+Two things have to change together, and only one of them is a flag.
+
+**The rule.** `DOWN` here requires `0 < x < q_lower`, so a feature at zero emits
+nothing: absence and low expression are deliberately different symbols. That is
+correct for the pooled reference shipped in this repository, whose percentiles
+were taken over each gene's non-zero pooled values. A reference whose percentiles
+were taken over **all** samples including zeros — as the bulk arm of the paper
+did — means something else by DOWN, and needs `--down_rule with_zeros`. Passing a
+table built one way with the rule of the other produces well-formed tokens that
+mean something different, and nothing raises an error. Every run records which
+rule it used in the coverage report.
+
+**The table.** The reference in `reference/` is **not usable for bulk**, and not
+because of the rule. It is gene-level (`AT2G01170`) and estimated on pooled
+single-cell data; the paper's bulk arm quantifies transcripts (`AT2G01170.1`)
+over 30,647 features with its own thresholds and its own 46,728-token
+vocabulary. The two vocabularies are not interchangeable and a model trained on
+one cannot read sentences written in the other. The bulk tables live in
+[ees-transformer](https://github.com/k821209/ees-transformer). If you point this
+tool at bulk data with the table shipped here, the identifier join will match
+almost nothing and the run will say so.
+
 ## Reproducibility
 
 `tests/test_roundtrip.py` tokenizes pseudo-bulks of the published corpus with

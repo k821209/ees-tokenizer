@@ -83,6 +83,24 @@ def parse_args():
                    help="sum the library size over this dataset's whole gene "
                         "axis instead of the reference universe. Only for "
                         "reproducing output from before that was made explicit.")
+    p.add_argument("--no_pooling", action="store_true",
+                   help="one sentence per sample, no pooling. Equivalent to "
+                        "--k 1. Use it when the input is already a bulk or "
+                        "otherwise pre-aggregated measurement, where pooling "
+                        "would average away the sample you care about. Every "
+                        "sample is emitted, not half of them.")
+    p.add_argument("--down_rule", choices=("nonzero", "with_zeros"),
+                   default="nonzero",
+                   help="what DOWN means, and it MUST match the table you pass. "
+                        "'nonzero' (default, the pooled single-cell reference "
+                        "shipped here): DOWN requires 0 < x < q_lower, so a "
+                        "feature at zero emits nothing and absence is not the "
+                        "same symbol as low. 'with_zeros' (a reference whose "
+                        "percentiles were taken over all samples INCLUDING "
+                        "zeros, as the bulk arm of the paper did): a zero "
+                        "counts as DOWN. Mixing a table built one way with the "
+                        "rule of the other produces well-formed tokens that "
+                        "mean something else, with no error raised.")
     p.add_argument("--min_tokens", type=int, default=10)
     p.add_argument("--max_tokens", type=int, default=8192)
     p.add_argument("--seed", type=int, default=42)
@@ -91,6 +109,15 @@ def parse_args():
                         "assume counts.")
     p.add_argument("--no_use_raw", dest="use_raw", action="store_false")
     return p.parse_args()
+
+
+def _resolve_pooling(a):
+    """--no_pooling is a readable spelling of k = 1; they must not disagree."""
+    if a.no_pooling:
+        if a.k not in (1, 10):
+            sys.exit(f"--no_pooling with --k {a.k} is contradictory; drop one")
+        a.k = 1
+    return a
 
 
 def load_reference(path):
@@ -133,7 +160,7 @@ def load_universe(path):
 
 
 def main():
-    a = parse_args()
+    a = _resolve_pooling(parse_args())
     import anndata as ad
     import pandas as pd
 
@@ -206,6 +233,9 @@ def main():
     dn_tok = np.array([f"{g}_DOWN" for g in kept_ids], dtype=object)
 
     cov = {
+        "pooling": ("none, one sentence per sample" if a.k == 1
+                    else f"k = {a.k}, {a.n_pools_div}-fold"),
+        "down_rule": a.down_rule,
         "reference_genes": len(ref),
         "dataset_genes": int(len(gene_ids)),
         "matched_genes": int(len(keep_pos)),
@@ -314,7 +344,10 @@ def main():
             v = norm[keep_pos]
             expressed = v > 0
             up_m = expressed & (v > q_hi)
-            dn_m = expressed & (v < q_lo)
+            # 'nonzero' is the rule the shipped table was built under: a feature
+            # at zero was excluded from its percentile and so cannot be DOWN.
+            dn_m = (expressed & (v < q_lo)) if a.down_rule == "nonzero" \
+                else (v < q_lo)
             toks = np.concatenate([up_tok[up_m], dn_tok[dn_m]])
             if len(toks) < a.min_tokens:
                 n_skipped += 1
