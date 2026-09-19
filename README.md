@@ -32,6 +32,10 @@ the surrounding samples differ. So the percentiles are estimated once, over
 and then applied unchanged — the way a language model's vocabulary is fixed once
 training ends.
 
+`reference/` holds **two** reference distributions, one per arm of the study —
+see *Already-bulk input* below for the table that tells them apart. The pooled
+single-cell one is the default and everything above describes it.
+
 **`reference/gene_percentiles_pb.csv`** has one row per gene:
 
 | column | meaning |
@@ -97,15 +101,33 @@ table built one way with the rule of the other produces well-formed tokens that
 mean something different, and nothing raises an error. Every run records which
 rule it used in the coverage report.
 
-**The table.** The reference in `reference/` is **not usable for bulk**, and not
-because of the rule. It is gene-level (`AT2G01170`) and estimated on pooled
-single-cell data; the paper's bulk arm quantifies transcripts (`AT2G01170.1`)
-over 30,647 features with its own thresholds and its own 46,728-token
-vocabulary. The two vocabularies are not interchangeable and a model trained on
-one cannot read sentences written in the other. The bulk tables live in
-[ees-transformer](https://github.com/k821209/ees-transformer). If you point this
-tool at bulk data with the table shipped here, the identifier join will match
-almost nothing and the run will say so.
+**The table.** Two references ship here and they are not substitutes. Pointing
+the tool at bulk data with the pooled table would match almost nothing on the
+identifier join, and the run says so — but get the pairing right and it is
+silent, so check it against this table:
+
+| | pooled single-cell | bulk |
+| --- | --- | --- |
+| file | `gene_percentiles_pb.csv` | `transcript_percentiles_bulk.csv` |
+| vocabulary | `ees_vocab.txt`, 63,121 | `ees_vocab_bulk.txt`, 46,728 |
+| identifiers | gene, `AT2G01170` | transcript, `AT2G01170.1` |
+| features | 36,534 of 53,678 genes | 30,647 of 48,365 transcripts, mean TPM ≥ 1.0 |
+| units | `log1p(count / library size × 10⁴)` | salmon TPM, used directly |
+| estimated over | 181,660 pools of ten cells | 12,212 sequencing runs |
+| `--down_rule` | `nonzero` | `with_zeros` |
+| pooling | `--k 10` | `--no_pooling` |
+
+The DOWN asymmetry in the bulk table is worth seeing before you use it. Because
+its percentiles were taken with zeros included, a transcript absent in at least
+5% of runs has `q_lower = 0` and can never emit DOWN: 14,571 of the 30,647 are in
+that position, which is exactly why the bulk vocabulary holds 30,647 UP tokens
+but only 16,076 DOWN. Filter on `q_lower > 0` if you need to know which
+transcripts can speak in both directions.
+
+A model trained on one vocabulary cannot read sentences written in the other.
+The bulk *model* is not part of this repository; it is in
+[ees-transformer](https://github.com/k821209/ees-transformer) with weights on
+HuggingFace.
 
 ## Reproducibility
 

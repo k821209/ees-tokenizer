@@ -1,0 +1,47 @@
+seedling
+leaf
+root
+shoot
+whole
+none
+seed
+flower
+stem
+pollen
+hypocotyl
+inflorescence
+fruit
+embryo
+callus
+cotyledon
+SAM
+nucleus
+endosperm
+ovule
+anther
+protoplast
+flower without anther
+bud
+epidermis
+leaf and inflorescence
+apex
+pistil
+shoot apex
+microspore
+valve
+meiocyte
+vascular
+vegetative
+calli
+petal
+shoot and leaf
+internode
+seedling without root
+leaf and petiole
+gynoecium
+petiole
+sepal
+leaf and root
+whole without root
+shoot apical meristem, cotyledon and leaf
+carpel
